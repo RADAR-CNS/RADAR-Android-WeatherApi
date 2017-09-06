@@ -36,7 +36,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Set;
+import java.util.TimeZone;
 
 import static android.location.LocationManager.GPS_PROVIDER;
 import static android.location.LocationManager.NETWORK_PROVIDER;
@@ -47,7 +50,6 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
     private static final int WEATHER_UPDATE_REQUEST_CODE = 12345678;
     private static final String ACTION_UPDATE_WEATHER = "org.radarcns.weather.WeatherApiManager.ACTION_UPDATE_WEATHER";
 
-    private final SharedPreferences preferences;
     private final OfflineProcessor processor;
     private final DataCache<MeasurementKey, Weather> weatherTable;
 
@@ -57,7 +59,6 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
     public WeatherApiManager(WeatherApiService service, String apiKey) {
         super(service, service.getDefaultState(), service.getDataHandler(), service.getUserId(), service.getSourceId());
 
-        preferences = service.getSharedPreferences(WeatherApiManager.class.getName(), Context.MODE_PRIVATE);
         weatherTable = getCache(service.getTopics().getWeatherTopic());
 
         locationManager = (LocationManager) service.getSystemService(Context.LOCATION_SERVICE);
@@ -128,23 +129,24 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         }
     }
 
-    private void sendWeather(CurrentWeather response, String locationProvider) {
-        // Instances
-        final CurrentWeather.Main main = response.getMainInstance();
-        final CurrentWeather.Clouds clouds = response.getCloudsInstance();
-
+    private void sendWeather(CurrentWeather weatherApiResult, String locationProvider) {
         // Precipitation from either rain or snow
-        float precipitation = getPrecipitation(response);
+        float precipitation = getPrecipitation(weatherApiResult);
 
         // Translation of weather condition
         WeatherCondition weatherCondition = null;
-        if (response.hasWeatherInstance()) {
+        if (weatherApiResult.hasWeatherInstance()) {
             // Get weather code of first weather condition instance
-            int code = response.getWeatherInstance(0).getWeatherCode();
+            int code = weatherApiResult.getWeatherInstance(0).getWeatherCode();
             weatherCondition = translateWeatherCode(code);
         }
 
-        // Location provider
+        // Time of day of sunrise and sunset.
+        final CurrentWeather.Sys sys = weatherApiResult.getSysInstance();
+        double sunrise = getTimeOfDayFromDate(sys.getSunriseTime());
+        double sunset = getTimeOfDayFromDate(sys.getSunsetTime());
+
+        // How location was derived
         LocationType locationType;
         switch (locationProvider) {
             case GPS_PROVIDER:
@@ -157,31 +159,37 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
                 locationType = LocationType.OTHER;
         }
 
+        // Instances
+        final CurrentWeather.Main main = weatherApiResult.getMainInstance();
+        final CurrentWeather.Clouds clouds = weatherApiResult.getCloudsInstance();
+
         double timestamp = System.currentTimeMillis();
         Weather weatherData = new Weather(timestamp, timestamp
+                ,sunrise
+                ,sunset
                 ,main.hasTemperature() ? main.getTemperature() : null
                 ,main.hasPressure() ? main.getPressure() : null
                 ,main.hasHumidity() ? main.getHumidity() : null
-                ,clouds.hasPercentageOfClouds() ? clouds.getPercentageOfClouds() : null
+                ,(weatherApiResult.hasCloudsInstance() && clouds.hasPercentageOfClouds()) ? clouds.getPercentageOfClouds() : null
                 ,precipitation
                 ,weatherCondition
-                ,"OWM"
+                ,"OpenWeatherMap"
                 ,locationType
                 );
 
         send(weatherTable, weatherData);
     }
 
-    private static float getPrecipitation(CurrentWeather response) {
+    private static float getPrecipitation(CurrentWeather weatherApiResult) {
         float totalPrecipitation = 0;
 
-        final CurrentWeather.Rain rain = response.getRainInstance();
-        if (response.hasRainInstance() && rain.hasRain3h()) {
+        final CurrentWeather.Rain rain = weatherApiResult.getRainInstance();
+        if (weatherApiResult.hasRainInstance() && rain.hasRain3h()) {
             totalPrecipitation += rain.getRain3h();
         }
 
-        final CurrentWeather.Snow snow = response.getSnowInstance();
-        if (response.hasSnowInstance() && snow.hasSnow3h()) {
+        final CurrentWeather.Snow snow = weatherApiResult.getSnowInstance();
+        if (weatherApiResult.hasSnowInstance() && snow.hasSnow3h()) {
             totalPrecipitation += snow.getSnow3h();
         }
 
@@ -212,6 +220,18 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         } else {
             return WeatherCondition.OTHER;
         }
+    }
+
+    /**
+     * Get the time of day in hours from a date object up to seconds precision.
+     * Assumes date object was made in the current timezone.
+     * @param date
+     * @return
+     */
+    private static double getTimeOfDayFromDate(Date date) {
+        Calendar c = Calendar.getInstance(TimeZone.getDefault());
+        c.setTime(date);
+        return c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE) / 60d + c.get(Calendar.SECOND) / 3600d;
     }
 
     void setQueryInterval(long queryInterval) {
