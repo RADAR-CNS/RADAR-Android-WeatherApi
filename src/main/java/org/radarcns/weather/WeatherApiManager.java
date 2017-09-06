@@ -17,15 +17,10 @@
 package org.radarcns.weather;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
 
-import net.aksingh.owmjapis.CurrentWeather;
-import net.aksingh.owmjapis.OpenWeatherMap;
-
-import org.json.JSONException;
 import org.radarcns.android.data.DataCache;
 import org.radarcns.android.device.AbstractDeviceManager;
 import org.radarcns.android.device.BaseDeviceState;
@@ -36,10 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Set;
-import java.util.TimeZone;
 
 import static android.location.LocationManager.GPS_PROVIDER;
 import static android.location.LocationManager.NETWORK_PROVIDER;
@@ -54,6 +46,7 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
     private final DataCache<MeasurementKey, Weather> weatherTable;
 
     private LocationManager locationManager;
+    private WeatherApi weatherApi;
     private final String apiKey;
 
     public WeatherApiManager(WeatherApiService service, String apiKey) {
@@ -66,7 +59,9 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         processor = new OfflineProcessor(service, this, WEATHER_UPDATE_REQUEST_CODE,
                 ACTION_UPDATE_WEATHER, service.getQueryInterval(), false);
 
+        // TODO: if apiKey changes, the application needs to be restarted
         this.apiKey = apiKey;
+        weatherApi = new OpenWeatherMapApi(apiKey);
 
         updateStatus(DeviceStatusListener.Status.READY);
     }
@@ -81,32 +76,52 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
 
     @Override
     public void run() {
-        // Get last known location
-        Location location = this.getLocation();
-
+        Location location = this.getLastKnownLocation();
         if (location == null) {
-            logger.error("Could not retrieve location for Weather API");
+            logger.error("Could not retrieve location. No input for Weather API");
             return;
         }
+//        logger.info("Location: ({},{}) from {}", location.getLatitude(), location.getLongitude(), location.getProvider());
 
-        final Double lat = location.getLatitude();
-        final Double lon = location.getLongitude();
-        logger.info("Location: ({},{}) from {}", lat, lon, location.getProvider());
-
-        // Get Weather data
-        OpenWeatherMap weatherApi = new OpenWeatherMap(OpenWeatherMap.Units.METRIC, apiKey);
-        CurrentWeather weatherApiResult;
         try {
-            weatherApiResult = weatherApi.currentWeatherByCoordinates(lat.floatValue(), lon.floatValue());
-        } catch (JSONException e) {
+            weatherApi.loadCurrentWeather(location.getLatitude(), location.getLongitude());
+//            weatherApiResult = weatherApi.currentWeatherByCoordinates(lat.floatValue(), lon.floatValue());
+        } catch (Exception e) {
             e.printStackTrace();
-            logger.error("Could not get weather from API.");
+            logger.error("Could not get weather from {} API.", weatherApi.getSourceName());
             return;
         }
 
-        logger.info(weatherApiResult.toString());
+//        logger.info(weatherApiResult.toString());
 
-        this.sendWeather(weatherApiResult, location.getProvider());
+        // How location was derived
+        LocationType locationType;
+        switch (location.getProvider()) {
+            case GPS_PROVIDER:
+                locationType = LocationType.GPS;
+                break;
+            case NETWORK_PROVIDER:
+                locationType = LocationType.NETWORK;
+                break;
+            default:
+                locationType = LocationType.OTHER;
+        }
+
+        double timestamp = System.currentTimeMillis();
+        Weather weatherData = new Weather(timestamp, timestamp
+                ,weatherApi.getSunRise()
+                ,weatherApi.getSunSet()
+                ,weatherApi.getTemperature()
+                ,weatherApi.getPressure()
+                ,weatherApi.getHumidity()
+                ,weatherApi.getCloudiness()
+                ,weatherApi.getPrecipitation3h()
+                ,weatherApi.getWeatherCondition()
+                ,weatherApi.getSourceName()
+                ,locationType
+        );
+
+        send(weatherTable, weatherData);
     }
 
     /**
@@ -114,7 +129,7 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
      * This location could be outdated if device was turned off and moved to another location.
      * @return Location or null if location could not be determined (not available or no permission)
      */
-    private Location getLocation() {
+    private Location getLastKnownLocation() {
         Location location;
         try {
             location = locationManager.getLastKnownLocation(GPS_PROVIDER);
@@ -127,111 +142,6 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
             ex.printStackTrace();
             return null;
         }
-    }
-
-    private void sendWeather(CurrentWeather weatherApiResult, String locationProvider) {
-        // Precipitation from either rain or snow
-        float precipitation = getPrecipitation(weatherApiResult);
-
-        // Translation of weather condition
-        WeatherCondition weatherCondition = null;
-        if (weatherApiResult.hasWeatherInstance()) {
-            // Get weather code of first weather condition instance
-            int code = weatherApiResult.getWeatherInstance(0).getWeatherCode();
-            weatherCondition = translateWeatherCode(code);
-        }
-
-        // Time of day of sunrise and sunset.
-        final CurrentWeather.Sys sys = weatherApiResult.getSysInstance();
-        double sunrise = getTimeOfDayFromDate(sys.getSunriseTime());
-        double sunset = getTimeOfDayFromDate(sys.getSunsetTime());
-
-        // How location was derived
-        LocationType locationType;
-        switch (locationProvider) {
-            case GPS_PROVIDER:
-                locationType = LocationType.GPS;
-                break;
-            case NETWORK_PROVIDER:
-                locationType = LocationType.NETWORK;
-                break;
-            default:
-                locationType = LocationType.OTHER;
-        }
-
-        // Instances
-        final CurrentWeather.Main main = weatherApiResult.getMainInstance();
-        final CurrentWeather.Clouds clouds = weatherApiResult.getCloudsInstance();
-
-        double timestamp = System.currentTimeMillis();
-        Weather weatherData = new Weather(timestamp, timestamp
-                ,sunrise
-                ,sunset
-                ,main.hasTemperature() ? main.getTemperature() : null
-                ,main.hasPressure() ? main.getPressure() : null
-                ,main.hasHumidity() ? main.getHumidity() : null
-                ,(weatherApiResult.hasCloudsInstance() && clouds.hasPercentageOfClouds()) ? clouds.getPercentageOfClouds() : null
-                ,precipitation
-                ,weatherCondition
-                ,"OpenWeatherMap"
-                ,locationType
-                );
-
-        send(weatherTable, weatherData);
-    }
-
-    private static float getPrecipitation(CurrentWeather weatherApiResult) {
-        float totalPrecipitation = 0;
-
-        final CurrentWeather.Rain rain = weatherApiResult.getRainInstance();
-        if (weatherApiResult.hasRainInstance() && rain.hasRain3h()) {
-            totalPrecipitation += rain.getRain3h();
-        }
-
-        final CurrentWeather.Snow snow = weatherApiResult.getSnowInstance();
-        if (weatherApiResult.hasSnowInstance() && snow.hasSnow3h()) {
-            totalPrecipitation += snow.getSnow3h();
-        }
-
-        return totalPrecipitation;
-    }
-
-    private static WeatherCondition translateWeatherCode(int code) {
-        if (code >= 200 && code < 300) {
-            return WeatherCondition.THUNDER;
-        } else if (code >= 300 && code < 400) {
-            return WeatherCondition.DRIZZLE;
-        } else if (code >= 500 && code < 600) {
-            return WeatherCondition.RAINY;
-        } else if (code >= 600 && code < 700) {
-            return WeatherCondition.SNOWY;
-        } else if (code == 701 || code == 721 || code == 741) {
-            return WeatherCondition.FOGGY;
-        } else if (code == 800) {
-            return WeatherCondition.CLEAR;
-        } else if (code > 800 && code < 900) {
-            return WeatherCondition.CLOUDY;
-        } else if (code == 900 || code == 901 || code == 902 || code == 905 || code >= 957) {
-            // tornado, tropical storm, hurricane, windy and high wind to hurricane
-            return WeatherCondition.STORM;
-        } else if (code == 906) {
-            // hail
-            return WeatherCondition.ICY;
-        } else {
-            return WeatherCondition.OTHER;
-        }
-    }
-
-    /**
-     * Get the time of day in hours from a date object up to seconds precision.
-     * Assumes date object was made in the current timezone.
-     * @param date
-     * @return
-     */
-    private static double getTimeOfDayFromDate(Date date) {
-        Calendar c = Calendar.getInstance(TimeZone.getDefault());
-        c.setTime(date);
-        return c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE) / 60d + c.get(Calendar.SECOND) / 3600d;
     }
 
     void setQueryInterval(long queryInterval) {
