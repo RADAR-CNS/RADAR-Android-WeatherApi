@@ -17,6 +17,7 @@
 package org.radarcns.weather;
 
 import android.os.Bundle;
+import android.os.Parcelable;
 
 import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.BaseDeviceState;
@@ -32,8 +33,12 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 public class WeatherApiProvider extends DeviceServiceProvider<BaseDeviceState> {
     public static final String PREFIX =  "org.radarcns.weather.";
     public static final String WEATHER_QUERY_INTERVAL =  "weather_query_interval_seconds";
+    public static final String WEATHER_API_KEY =  "weather_api_key";
     public static final String WEATHER_QUERY_INTERVAL_KEY =  PREFIX + WEATHER_QUERY_INTERVAL;
-    public static final long WEATHER_QUERY_INTERVAL_DEFAULT = TimeUnit.HOURS.toSeconds(1);
+    public static final String WEATHER_API_KEY_KEY =  PREFIX + WEATHER_API_KEY;
+
+    public static final long WEATHER_QUERY_INTERVAL_DEFAULT = TimeUnit.HOURS.toSeconds(1); // TimeUnit.SECONDS.toSeconds(20);
+    public static final String WEATHER_API_KEY_DEFAULT = "ffc06279bd7dec6615c909ff703a50ff";
 
     @Override
     public Class<?> getServiceClass() {
@@ -59,7 +64,11 @@ public class WeatherApiProvider extends DeviceServiceProvider<BaseDeviceState> {
     protected void configure(Bundle bundle) {
         super.configure(bundle);
         RadarConfiguration config = getConfig();
-        bundle.putLong(WEATHER_QUERY_INTERVAL_KEY, config.getLong(
-                WEATHER_QUERY_INTERVAL, WEATHER_QUERY_INTERVAL_DEFAULT));
+        bundle.putLong(WEATHER_QUERY_INTERVAL_KEY,
+                config.getLong(WEATHER_QUERY_INTERVAL, WEATHER_QUERY_INTERVAL_DEFAULT)
+        );
+        bundle.putString(WEATHER_API_KEY_KEY,
+                config.getString(WEATHER_API_KEY, WEATHER_API_KEY_DEFAULT)
+        );
     }
 }
