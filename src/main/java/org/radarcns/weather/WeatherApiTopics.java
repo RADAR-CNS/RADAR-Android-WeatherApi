@@ -23,7 +23,7 @@ import org.radarcns.topic.AvroTopic;
 public class WeatherApiTopics extends DeviceTopics {
     private static WeatherApiTopics instance = null;
 
-    private final AvroTopic<MeasurementKey, Weather> weatherTopic;
+    private final AvroTopic<MeasurementKey, WeatherCurrent> weatherTopic;
 
     public static WeatherApiTopics getInstance() {
         synchronized (DeviceTopics.class) {
@@ -36,11 +36,11 @@ public class WeatherApiTopics extends DeviceTopics {
 
     private WeatherApiTopics() {
         weatherTopic = createTopic("weather",
-                Weather.getClassSchema(),
-                Weather.class);
+                WeatherCurrent.getClassSchema(),
+                WeatherCurrent.class);
     }
 
-    public AvroTopic<MeasurementKey, Weather> getWeatherTopic() {
+    public AvroTopic<MeasurementKey, WeatherCurrent> getWeatherTopic() {
         return weatherTopic;
     }
 }

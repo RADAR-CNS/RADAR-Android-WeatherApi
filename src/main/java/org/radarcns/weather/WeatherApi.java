@@ -28,6 +28,12 @@ public interface WeatherApi {
     void loadCurrentWeather(Double latitude, Double longitude) throws Exception;
 
     /**
+     * returns timestamp of last weather load in seconds UTC
+     * @return timestamp
+     */
+    Double getTimestamp();
+
+    /**
      * Returns temperature in degrees Celsius. Or null if unknown.
      * @return temperature
      */

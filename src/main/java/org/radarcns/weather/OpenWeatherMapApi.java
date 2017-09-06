@@ -30,22 +30,37 @@ class OpenWeatherMapApi implements WeatherApi {
     private OpenWeatherMap owm;
     private CurrentWeather cw;
     private static final String SOURCE_NAME = "OpenWeatherMap";
+    private Double timestamp;
 
     OpenWeatherMapApi(String apiKey) {
         owm = new OpenWeatherMap(OpenWeatherMap.Units.METRIC, apiKey);
+        // TODO: apiKey verification
     }
 
     @Override
     public void loadCurrentWeather(Double latitude, Double longitude) throws Exception {
-        //TODO: getters should return warning if this method is not yet called. (owm is null)
         try {
             cw = owm.currentWeatherByCoordinates(latitude.floatValue(), longitude.floatValue());
         } catch (JSONException ex) {
-            throw new Exception("Could not get weather data from the OpenWeatherMap API" +
+            throw new Exception("Could not parse weather data from the OpenWeatherMap API " +
                     "for latitude " + Double.toString(latitude) +
                     " and longitude " + Double.toString(longitude)
             );
         }
+
+        if (cw.isValid()) {
+            this.timestamp = System.currentTimeMillis() / 1000d;
+        } else {
+            throw new Exception("Could not get weather data from the OpenWeatherMap API " +
+                    "for latitude " + Double.toString(latitude) +
+                    " and longitude " + Double.toString(longitude)
+            );
+        }
+    }
+
+    @Override
+    public Double getTimestamp() {
+        return timestamp;
     }
 
     @Override

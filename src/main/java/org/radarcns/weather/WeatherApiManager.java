@@ -43,7 +43,7 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
     private static final String ACTION_UPDATE_WEATHER = "org.radarcns.weather.WeatherApiManager.ACTION_UPDATE_WEATHER";
 
     private final OfflineProcessor processor;
-    private final DataCache<MeasurementKey, Weather> weatherTable;
+    private final DataCache<MeasurementKey, WeatherCurrent> weatherTable;
 
     private LocationManager locationManager;
     private WeatherApi weatherApi;
@@ -59,10 +59,10 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         processor = new OfflineProcessor(service, this, WEATHER_UPDATE_REQUEST_CODE,
                 ACTION_UPDATE_WEATHER, service.getQueryInterval(), false);
 
-        // TODO: if apiKey changes, the application needs to be restarted
         this.apiKey = apiKey;
         weatherApi = new OpenWeatherMapApi(apiKey);
 
+        logger.info("WeatherApiManager created with interval of {} seconds and key {}", service.getQueryInterval(), apiKey);
         updateStatus(DeviceStatusListener.Status.READY);
     }
 
@@ -81,18 +81,14 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
             logger.error("Could not retrieve location. No input for Weather API");
             return;
         }
-//        logger.info("Location: ({},{}) from {}", location.getLatitude(), location.getLongitude(), location.getProvider());
 
         try {
             weatherApi.loadCurrentWeather(location.getLatitude(), location.getLongitude());
-//            weatherApiResult = weatherApi.currentWeatherByCoordinates(lat.floatValue(), lon.floatValue());
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("Could not get weather from {} API.", weatherApi.getSourceName());
             return;
         }
-
-//        logger.info(weatherApiResult.toString());
 
         // How location was derived
         LocationType locationType;
@@ -107,8 +103,10 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
                 locationType = LocationType.OTHER;
         }
 
-        double timestamp = System.currentTimeMillis();
-        Weather weatherData = new Weather(timestamp, timestamp
+        double timestamp = System.currentTimeMillis() / 1000d;
+        WeatherCurrent weatherData = new WeatherCurrent(
+                weatherApi.getTimestamp()
+                ,timestamp
                 ,weatherApi.getSunRise()
                 ,weatherApi.getSunSet()
                 ,weatherApi.getTemperature()
@@ -121,6 +119,7 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
                 ,locationType
         );
 
+        logger.info("Weather: {} C, {} hPa", weatherApi.getTemperature(), weatherApi.getPressure());
         send(weatherTable, weatherData);
     }
 

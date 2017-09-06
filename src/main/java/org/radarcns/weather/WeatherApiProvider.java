@@ -17,7 +17,6 @@
 package org.radarcns.weather;
 
 import android.os.Bundle;
-import android.os.Parcelable;
 
 import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.BaseDeviceState;
@@ -37,12 +36,12 @@ public class WeatherApiProvider extends DeviceServiceProvider<BaseDeviceState> {
     public static final String WEATHER_QUERY_INTERVAL_KEY =  PREFIX + WEATHER_QUERY_INTERVAL;
     public static final String WEATHER_API_KEY_KEY =  PREFIX + WEATHER_API_KEY;
 
-    public static final long WEATHER_QUERY_INTERVAL_DEFAULT = TimeUnit.HOURS.toSeconds(1); // TimeUnit.SECONDS.toSeconds(20);
-    public static final String WEATHER_API_KEY_DEFAULT = "ffc06279bd7dec6615c909ff703a50ff";
+    public static final long WEATHER_QUERY_INTERVAL_DEFAULT = TimeUnit.HOURS.toSeconds(1);
+    public static final String WEATHER_API_KEY_DEFAULT = "";
 
     @Override
     public Class<?> getServiceClass() {
-        return WeatherApiProvider.class;
+        return WeatherApiService.class;
     }
 
     @Override
