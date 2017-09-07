@@ -98,6 +98,3 @@ modules.xml
 .idea/
 
 libs/
-
-# API key
-src/main/res/values/openweather_api_key.xml

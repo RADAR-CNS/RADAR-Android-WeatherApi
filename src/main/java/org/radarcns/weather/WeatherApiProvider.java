@@ -36,7 +36,7 @@ public class WeatherApiProvider extends DeviceServiceProvider<BaseDeviceState> {
     public static final String WEATHER_QUERY_INTERVAL_KEY =  PREFIX + WEATHER_QUERY_INTERVAL;
     public static final String WEATHER_API_KEY_KEY =  PREFIX + WEATHER_API_KEY;
 
-    public static final long WEATHER_QUERY_INTERVAL_DEFAULT = TimeUnit.HOURS.toSeconds(1);
+    public static final long WEATHER_QUERY_INTERVAL_DEFAULT = TimeUnit.HOURS.toSeconds(3);
     public static final String WEATHER_API_KEY_DEFAULT = "";
 
     @Override

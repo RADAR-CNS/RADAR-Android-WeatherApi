@@ -34,7 +34,6 @@ class OpenWeatherMapApi implements WeatherApi {
 
     OpenWeatherMapApi(String apiKey) {
         owm = new OpenWeatherMap(OpenWeatherMap.Units.METRIC, apiKey);
-        // TODO: apiKey verification
     }
 
     @Override
