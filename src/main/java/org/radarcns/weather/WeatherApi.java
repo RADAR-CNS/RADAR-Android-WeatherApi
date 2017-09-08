@@ -1,4 +1,3 @@
-package org.radarcns.weather;
 /*
  * Copyright 2017 The Hyve
  *
@@ -13,9 +12,9 @@ package org.radarcns.weather;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * Created by Maxim on 06-09-17.
  */
+
+package org.radarcns.weather;
 
 public interface WeatherApi {
 
@@ -58,10 +57,16 @@ public interface WeatherApi {
     Float getCloudiness();
 
     /**
-     * Returns precipitation of the last 3h in millimeter. Or null if unknown.
+     * Returns precipitation of the last x hours in millimeter. Or null if unknown.
      * @return precipitation
      */
-    Float getPrecipitation3h();
+    Float getPrecipitation();
+
+    /**
+     * Returns hours over which the precipitation was measured. Or null if unknown.
+     * @return precipitation
+     */
+    Integer getPrecipitationPeriod();
 
     /**
      * Returns the current weather condition (Clear, Cloudy, Rainy, etc.). Or null if unknown.
@@ -73,13 +78,13 @@ public interface WeatherApi {
      * Returns the current time of day of sunrise in hours after midnight. Or null if unknown.
      * @return sunrise
      */
-    Double getSunRise();
+    Integer getSunRise();
 
     /**
      * Returns the current time of day of sunset in hours after midnight. Or null if unknown.
      * @return sunset
      */
-    Double getSunSet();
+    Integer getSunSet();
 
     /**
      * Returns name of the source where the weather data was requested.

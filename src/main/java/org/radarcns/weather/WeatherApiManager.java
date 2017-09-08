@@ -113,13 +113,14 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
                 ,weatherApi.getPressure()
                 ,weatherApi.getHumidity()
                 ,weatherApi.getCloudiness()
-                ,weatherApi.getPrecipitation3h()
+                ,weatherApi.getPrecipitation()
+                ,weatherApi.getPrecipitationPeriod()
                 ,weatherApi.getWeatherCondition()
                 ,weatherApi.getSourceName()
                 ,locationType
         );
 
-        logger.info("Weather: {} C, {} hPa", weatherApi.getTemperature(), weatherApi.getPressure());
+        logger.info("Weather: {} {} {}", weatherApi.toString(), weatherApi.getSunRise(), weatherApi.getSunSet());
         send(weatherTable, weatherData);
     }
 

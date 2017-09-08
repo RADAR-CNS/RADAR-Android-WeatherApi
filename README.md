@@ -9,11 +9,6 @@ All data is based on the last known location of the phone. This location could b
 The following weather API is implemented:
  - [OpenWeatherMap](https://openweathermap.org/current)
 
-## Api Key
-
-A valid api key for the external Weather API needs to be supplied.
-This key can be supplied through the remote config settings (`weather_api_key`) in the main Android Application or by adding a default in `WeaterhApiProvider.WEATHER_API_KEY_DEFAULT`.
-
 ## Installation
 
 First, add the plugin code to your application:
@@ -27,6 +22,11 @@ dependencies {
     compile 'org.radarcns:radar-android-weatherapi:0.1-alpha.1'
 }
 ```
+
+### Api Key
+
+A valid api key for the external Weather API needs to be supplied.
+This key can be given through the remote config settings (`weather_api_key`) in the main Android Application or by adding a default in `WeaterhApiProvider.WEATHER_API_KEY_DEFAULT`.
 
 ## Contributing
 

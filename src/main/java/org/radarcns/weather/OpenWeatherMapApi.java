@@ -1,4 +1,3 @@
-package org.radarcns.weather;
 /*
  * Copyright 2017 The Hyve
  *
@@ -13,9 +12,9 @@ package org.radarcns.weather;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * Created by Maxim on 06-09-17.
  */
+
+package org.radarcns.weather;
 
 import net.aksingh.owmjapis.CurrentWeather;
 import net.aksingh.owmjapis.OpenWeatherMap;
@@ -87,7 +86,7 @@ class OpenWeatherMapApi implements WeatherApi {
     }
 
     @Override
-    public Float getPrecipitation3h() {
+    public Float getPrecipitation() {
         // Total precipitation from rain and snow
         float totalPrecipitation = 0;
 
@@ -102,6 +101,12 @@ class OpenWeatherMapApi implements WeatherApi {
         }
 
         return totalPrecipitation;
+    }
+
+    @Override
+    public Integer getPrecipitationPeriod() {
+        // Always 3 hours
+        return 3;
     }
 
     @Override
@@ -121,13 +126,21 @@ class OpenWeatherMapApi implements WeatherApi {
     }
 
     @Override
-    public Double getSunRise() {
+    public Integer getSunRise() {
+        if (!cw.hasSysInstance()) {
+            return null;
+        }
+
         CurrentWeather.Sys sys = cw.getSysInstance();
         return getTimeOfDayFromDate(sys.getSunriseTime());
     }
 
     @Override
-    public Double getSunSet() {
+    public Integer getSunSet() {
+        if (!cw.hasSysInstance()) {
+            return null;
+        }
+
         CurrentWeather.Sys sys = cw.getSysInstance();
         return getTimeOfDayFromDate(sys.getSunsetTime());
     }
@@ -159,14 +172,23 @@ class OpenWeatherMapApi implements WeatherApi {
     }
 
     /**
-     * Get the time of day in hours from a date object up to seconds precision.
-     * Assumes date object was made in the current timezone.
+     * Get the time of day in minutes precision from a date object
+     * in the current time zone of the device.
      * @param date a date object
-     * @return hours from midnight in current timezone
+     * @return whole minutes from midnight in current timezone
      */
-    private static double getTimeOfDayFromDate(Date date) {
+    private static Integer getTimeOfDayFromDate(Date date) {
+        if (date == null || date.getTime() == 0) {
+            return null;
+        }
+
         Calendar c = Calendar.getInstance(TimeZone.getDefault());
         c.setTime(date);
-        return c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE) / 60d + c.get(Calendar.SECOND) / 3600d;
+        return c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE);
+    }
+
+    @Override
+    public String toString() {
+        return cw.toString();
     }
 }
