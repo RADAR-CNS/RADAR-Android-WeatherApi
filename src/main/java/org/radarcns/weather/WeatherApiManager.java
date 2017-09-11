@@ -39,7 +39,7 @@ import static android.location.LocationManager.NETWORK_PROVIDER;
 public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, BaseDeviceState> implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(WeatherApiManager.class);
 
-    private static final int WEATHER_UPDATE_REQUEST_CODE = 12345678;
+    private static final int WEATHER_UPDATE_REQUEST_CODE = 627976615;
     private static final String ACTION_UPDATE_WEATHER = "org.radarcns.weather.WeatherApiManager.ACTION_UPDATE_WEATHER";
 
     private final OfflineProcessor processor;
@@ -57,7 +57,7 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         locationManager = (LocationManager) service.getSystemService(Context.LOCATION_SERVICE);
 
         processor = new OfflineProcessor(service, this, WEATHER_UPDATE_REQUEST_CODE,
-                ACTION_UPDATE_WEATHER, service.getQueryInterval(), false);
+                ACTION_UPDATE_WEATHER, service.getQueryInterval(), true);
 
         this.apiKey = apiKey;
         weatherApi = new OpenWeatherMapApi(apiKey);
