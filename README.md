@@ -28,6 +28,8 @@ dependencies {
 A valid api key for the external Weather API needs to be supplied.
 This key can be given through the remote config settings (`weather_api_key`) in the main Android Application or by adding a default in `WeaterhApiProvider.WEATHER_API_KEY_DEFAULT`.
 
+The api key for access to OpenWeatherMap can be retrieved by [signing up for free](http://openweathermap.org/price#weather). Note that the free plan is subject to a maximum number of calls per minute and has a limited data update frequency.
+
 ## Contributing
 
 To add a new weather source, implement the `WeatherApi` interface and add its instantiation in the `WeatherApiManager` constructor.
