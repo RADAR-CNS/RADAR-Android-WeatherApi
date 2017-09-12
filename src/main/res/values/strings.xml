@@ -1,4 +1,4 @@
 <resources>
-    <string name="openWeatherApiServcieDisplayName">OpenWeather</string>
+    <string name="weatherApiServcieDisplayName">WeatherApi</string>
     <!--<string name="google_api_key">AIzaSyDKkkKpljqXx0s9BxRZ_v7B-4xFhmFuhwA</string>-->
 </resources>

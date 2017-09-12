@@ -41,15 +41,15 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
 
     private static final int WEATHER_UPDATE_REQUEST_CODE = 627976615;
     private static final String ACTION_UPDATE_WEATHER = "org.radarcns.weather.WeatherApiManager.ACTION_UPDATE_WEATHER";
+    static final String SOURCE_OPENWEATHERMAP = "openweathermap";
 
     private final OfflineProcessor processor;
     private final DataCache<MeasurementKey, WeatherCurrent> weatherTable;
 
     private LocationManager locationManager;
     private WeatherApi weatherApi;
-    private final String apiKey;
 
-    public WeatherApiManager(WeatherApiService service, String apiKey) {
+    public WeatherApiManager(WeatherApiService service, String source, String apiKey) {
         super(service, service.getDefaultState(), service.getDataHandler(), service.getUserId(), service.getSourceId());
 
         weatherTable = getCache(service.getTopics().getWeatherTopic());
@@ -59,8 +59,14 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         processor = new OfflineProcessor(service, this, WEATHER_UPDATE_REQUEST_CODE,
                 ACTION_UPDATE_WEATHER, service.getQueryInterval(), true);
 
-        this.apiKey = apiKey;
-        weatherApi = new OpenWeatherMapApi(apiKey);
+        switch(source) {
+            case SOURCE_OPENWEATHERMAP:
+                weatherApi = new OpenWeatherMapApi(apiKey);
+                break;
+            default:
+                logger.error("The weather api '{}' is not recognised. Please set a different weather api source.", source);
+                return;
+        }
 
         logger.info("WeatherApiManager created with interval of {} seconds and key {}", service.getQueryInterval(), apiKey);
         updateStatus(DeviceStatusListener.Status.READY);

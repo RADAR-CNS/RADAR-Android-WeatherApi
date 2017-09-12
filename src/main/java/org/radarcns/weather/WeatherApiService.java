@@ -26,17 +26,20 @@ import org.radarcns.android.device.DeviceService;
 import static org.radarcns.android.RadarConfiguration.SOURCE_ID_KEY;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_KEY_DEFAULT;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_KEY_KEY;
+import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_SOURCE_DEFAULT;
+import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_SOURCE_KEY;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_QUERY_INTERVAL_DEFAULT;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_QUERY_INTERVAL_KEY;
 
 public class WeatherApiService extends DeviceService {
     private String sourceId;
     private long queryInterval = WEATHER_QUERY_INTERVAL_DEFAULT;
+    private String apiSource = WEATHER_API_SOURCE_DEFAULT;
     private String apiKey = WEATHER_API_KEY_DEFAULT;
 
     @Override
     protected DeviceManager createDeviceManager() {
-        return new WeatherApiManager(this, apiKey);
+        return new WeatherApiManager(this, apiSource, apiKey);
     }
 
     @Override
@@ -64,6 +67,7 @@ public class WeatherApiService extends DeviceService {
     protected void onInvocation(Bundle bundle) {
         super.onInvocation(bundle);
         queryInterval = bundle.getLong(WEATHER_QUERY_INTERVAL_KEY);
+        apiSource = bundle.getString(WEATHER_API_SOURCE_KEY);
         apiKey = bundle.getString(WEATHER_API_KEY_KEY);
 
         WeatherApiManager weatherApiManager = (WeatherApiManager) getDeviceManager();
