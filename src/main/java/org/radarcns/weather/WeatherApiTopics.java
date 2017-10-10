@@ -17,13 +17,14 @@
 package org.radarcns.weather;
 
 import org.radarcns.android.device.DeviceTopics;
-import org.radarcns.key.MeasurementKey;
+import org.radarcns.kafka.ObservationKey;
+import org.radarcns.passive.weather.LocalWeather;
 import org.radarcns.topic.AvroTopic;
 
 public class WeatherApiTopics extends DeviceTopics {
     private static WeatherApiTopics instance = null;
 
-    private final AvroTopic<MeasurementKey, WeatherCurrent> weatherTopic;
+    private final AvroTopic<ObservationKey, LocalWeather> weatherTopic;
 
     public static WeatherApiTopics getInstance() {
         synchronized (DeviceTopics.class) {
@@ -36,11 +37,11 @@ public class WeatherApiTopics extends DeviceTopics {
 
     private WeatherApiTopics() {
         weatherTopic = createTopic("weather",
-                WeatherCurrent.getClassSchema(),
-                WeatherCurrent.class);
+                LocalWeather.getClassSchema(),
+                LocalWeather.class);
     }
 
-    public AvroTopic<MeasurementKey, WeatherCurrent> getWeatherTopic() {
+    public AvroTopic<ObservationKey, LocalWeather> getWeatherTopic() {
         return weatherTopic;
     }
 }

@@ -18,6 +18,7 @@ package org.radarcns.weather;
 
 import android.os.Bundle;
 
+import android.support.annotation.NonNull;
 import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceServiceProvider;
@@ -31,17 +32,22 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static org.radarcns.weather.WeatherApiManager.SOURCE_OPENWEATHERMAP;
 
 public class WeatherApiProvider extends DeviceServiceProvider<BaseDeviceState> {
-    static final String PREFIX =  "org.radarcns.weather.";
-    static final String WEATHER_QUERY_INTERVAL =  "weather_query_interval_seconds";
+    private static final String PREFIX =  "org.radarcns.weather.";
+    private static final String WEATHER_QUERY_INTERVAL =  "weather_query_interval_seconds";
     static final String WEATHER_QUERY_INTERVAL_KEY =  PREFIX + WEATHER_QUERY_INTERVAL;
-    static final String WEATHER_API_SOURCE =  "weather_api_source";
+    private static final String WEATHER_API_SOURCE =  "weather_api_source";
     static final String WEATHER_API_SOURCE_KEY =  PREFIX + WEATHER_API_SOURCE;
-    static final String WEATHER_API_KEY =  "weather_api_key";
+    private static final String WEATHER_API_KEY =  "weather_api_key";
     static final String WEATHER_API_KEY_KEY =  PREFIX + WEATHER_API_KEY;
 
     static final long WEATHER_QUERY_INTERVAL_DEFAULT = TimeUnit.HOURS.toSeconds(3);
     static final String WEATHER_API_SOURCE_DEFAULT = SOURCE_OPENWEATHERMAP;
     static final String WEATHER_API_KEY_DEFAULT = "";
+
+    @Override
+    public String getDescription() {
+        return getActivity().getString(R.string.weather_api_description);
+    }
 
     @Override
     public Class<?> getServiceClass() {
@@ -56,6 +62,24 @@ public class WeatherApiProvider extends DeviceServiceProvider<BaseDeviceState> {
     @Override
     public List<String> needsPermissions() {
         return Arrays.asList(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION);
+    }
+
+    @NonNull
+    @Override
+    public String getDeviceProducer() {
+        return "OpenWeatherMap";
+    }
+
+    @NonNull
+    @Override
+    public String getDeviceModel() {
+        return "API";
+    }
+
+    @NonNull
+    @Override
+    public String getVersion() {
+        return BuildConfig.VERSION_NAME;
     }
 
     @Override

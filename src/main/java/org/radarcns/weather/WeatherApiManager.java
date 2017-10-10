@@ -20,13 +20,14 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
-
 import org.radarcns.android.data.DataCache;
 import org.radarcns.android.device.AbstractDeviceManager;
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceStatusListener;
 import org.radarcns.android.util.OfflineProcessor;
-import org.radarcns.key.MeasurementKey;
+import org.radarcns.kafka.ObservationKey;
+import org.radarcns.passive.weather.LocalWeather;
+import org.radarcns.passive.weather.LocationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,7 @@ import java.util.Set;
 
 import static android.location.LocationManager.GPS_PROVIDER;
 import static android.location.LocationManager.NETWORK_PROVIDER;
+import static org.radarcns.weather.OpenWeatherMapApi.SOURCE_NAME;
 
 public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, BaseDeviceState> implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(WeatherApiManager.class);
@@ -44,13 +46,13 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
     static final String SOURCE_OPENWEATHERMAP = "openweathermap";
 
     private final OfflineProcessor processor;
-    private final DataCache<MeasurementKey, WeatherCurrent> weatherTable;
+    private final DataCache<ObservationKey, LocalWeather> weatherTable;
 
     private LocationManager locationManager;
     private WeatherApi weatherApi;
 
     public WeatherApiManager(WeatherApiService service, String source, String apiKey) {
-        super(service, service.getDefaultState(), service.getDataHandler(), service.getUserId(), service.getSourceId());
+        super(service);
 
         weatherTable = getCache(service.getTopics().getWeatherTopic());
 
@@ -67,13 +69,14 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
                 logger.error("The weather api '{}' is not recognised. Please set a different weather api source.", source);
                 return;
         }
-
+        setName(SOURCE_NAME);
         logger.info("WeatherApiManager created with interval of {} seconds and key {}", service.getQueryInterval(), apiKey);
-        updateStatus(DeviceStatusListener.Status.READY);
     }
 
     @Override
     public void start(@NonNull Set<String> acceptableIds) {
+        updateStatus(DeviceStatusListener.Status.READY);
+
         logger.info("Starting WeatherApiManager");
         processor.start();
 
@@ -110,20 +113,20 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         }
 
         double timestamp = System.currentTimeMillis() / 1000d;
-        WeatherCurrent weatherData = new WeatherCurrent(
-                weatherApi.getTimestamp()
-                ,timestamp
-                ,weatherApi.getSunRise()
-                ,weatherApi.getSunSet()
-                ,weatherApi.getTemperature()
-                ,weatherApi.getPressure()
-                ,weatherApi.getHumidity()
-                ,weatherApi.getCloudiness()
-                ,weatherApi.getPrecipitation()
-                ,weatherApi.getPrecipitationPeriod()
-                ,weatherApi.getWeatherCondition()
-                ,weatherApi.getSourceName()
-                ,locationType
+        LocalWeather weatherData = new LocalWeather(
+                weatherApi.getTimestamp(),
+                timestamp,
+                weatherApi.getSunRise(),
+                weatherApi.getSunSet(),
+                weatherApi.getTemperature(),
+                weatherApi.getPressure(),
+                weatherApi.getHumidity(),
+                weatherApi.getCloudiness(),
+                weatherApi.getPrecipitation(),
+                weatherApi.getPrecipitationPeriod(),
+                weatherApi.getWeatherCondition(),
+                weatherApi.getSourceName(),
+                locationType
         );
 
         logger.info("Weather: {} {} {}", weatherApi.toString(), weatherApi.getSunRise(), weatherApi.getSunSet());

@@ -16,6 +16,8 @@
 
 package org.radarcns.weather;
 
+import org.radarcns.passive.weather.WeatherCondition;
+
 public interface WeatherApi {
 
     /**

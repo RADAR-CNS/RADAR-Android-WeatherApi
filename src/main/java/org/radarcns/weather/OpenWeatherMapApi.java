@@ -20,6 +20,7 @@ import net.aksingh.owmjapis.CurrentWeather;
 import net.aksingh.owmjapis.OpenWeatherMap;
 
 import org.json.JSONException;
+import org.radarcns.passive.weather.WeatherCondition;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -28,7 +29,7 @@ import java.util.TimeZone;
 class OpenWeatherMapApi implements WeatherApi {
     private OpenWeatherMap owm;
     private CurrentWeather cw;
-    private static final String SOURCE_NAME = "OpenWeatherMap";
+    static final String SOURCE_NAME = "OpenWeatherMap";
     private Double timestamp;
 
     OpenWeatherMapApi(String apiKey) {
