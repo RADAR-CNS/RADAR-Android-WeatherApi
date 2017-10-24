@@ -20,7 +20,6 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
-import org.radarcns.android.data.DataCache;
 import org.radarcns.android.device.AbstractDeviceManager;
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceStatusListener;
@@ -47,15 +46,13 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
     static final String SOURCE_OPENWEATHERMAP = "openweathermap";
 
     private final OfflineProcessor processor;
-    private final AvroTopic<ObservationKey, LocalWeather> weatherTopic;
+    private final AvroTopic<ObservationKey, LocalWeather> weatherTopic = createTopic("weather", LocalWeather.class);
 
     private LocationManager locationManager;
     private WeatherApi weatherApi;
 
     public WeatherApiManager(WeatherApiService service, String source, String apiKey) {
         super(service);
-
-        weatherTopic = service.getTopics().getWeatherTopic();
 
         locationManager = (LocationManager) service.getSystemService(Context.LOCATION_SERVICE);
 

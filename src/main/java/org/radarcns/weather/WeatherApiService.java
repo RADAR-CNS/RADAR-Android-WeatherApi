@@ -18,13 +18,9 @@ package org.radarcns.weather;
 
 import android.os.Bundle;
 
-import org.codehaus.jackson.map.Serializers;
-import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.BaseDeviceState;
-import org.radarcns.android.device.DeviceManager;
 import org.radarcns.android.device.DeviceService;
 
-import static org.radarcns.android.RadarConfiguration.SOURCE_ID_KEY;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_KEY_DEFAULT;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_KEY_KEY;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_SOURCE_DEFAULT;
@@ -45,11 +41,6 @@ public class WeatherApiService extends DeviceService<BaseDeviceState> {
     @Override
     protected BaseDeviceState getDefaultState() {
         return new BaseDeviceState();
-    }
-
-    @Override
-    protected WeatherApiTopics getTopics() {
-        return WeatherApiTopics.getInstance();
     }
 
     long getQueryInterval() {
