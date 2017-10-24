@@ -36,9 +36,7 @@ public class WeatherApiTopics extends DeviceTopics {
     }
 
     private WeatherApiTopics() {
-        weatherTopic = createTopic("weather",
-                LocalWeather.getClassSchema(),
-                LocalWeather.class);
+        weatherTopic = createTopic("weather", LocalWeather.class);
     }
 
     public AvroTopic<ObservationKey, LocalWeather> getWeatherTopic() {
