@@ -46,7 +46,7 @@ public class WeatherApiProvider extends DeviceServiceProvider<BaseDeviceState> {
 
     @Override
     public String getDescription() {
-        return getActivity().getString(R.string.weather_api_description);
+        return getRadarService().getString(R.string.weather_api_description);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class WeatherApiProvider extends DeviceServiceProvider<BaseDeviceState> {
 
     @Override
     public String getDisplayName() {
-        return getActivity().getString(R.string.weatherApiServcieDisplayName);
+        return getRadarService().getString(R.string.weatherApiServcieDisplayName);
     }
 
     @Override

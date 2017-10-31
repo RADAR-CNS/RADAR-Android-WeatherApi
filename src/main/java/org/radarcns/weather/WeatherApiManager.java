@@ -20,7 +20,6 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
-import org.radarcns.android.data.DataCache;
 import org.radarcns.android.device.AbstractDeviceManager;
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceStatusListener;
@@ -28,6 +27,7 @@ import org.radarcns.android.util.OfflineProcessor;
 import org.radarcns.kafka.ObservationKey;
 import org.radarcns.passive.weather.LocalWeather;
 import org.radarcns.passive.weather.LocationType;
+import org.radarcns.topic.AvroTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,15 +46,13 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
     static final String SOURCE_OPENWEATHERMAP = "openweathermap";
 
     private final OfflineProcessor processor;
-    private final DataCache<ObservationKey, LocalWeather> weatherTable;
+    private final AvroTopic<ObservationKey, LocalWeather> weatherTopic = createTopic("weather", LocalWeather.class);
 
     private LocationManager locationManager;
     private WeatherApi weatherApi;
 
     public WeatherApiManager(WeatherApiService service, String source, String apiKey) {
         super(service);
-
-        weatherTable = getCache(service.getTopics().getWeatherTopic());
 
         locationManager = (LocationManager) service.getSystemService(Context.LOCATION_SERVICE);
 
@@ -130,7 +128,7 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         );
 
         logger.info("Weather: {} {} {}", weatherApi.toString(), weatherApi.getSunRise(), weatherApi.getSunSet());
-        send(weatherTable, weatherData);
+        send(weatherTopic, weatherData);
     }
 
     /**
