@@ -18,12 +18,9 @@ package org.radarcns.weather;
 
 import android.os.Bundle;
 
-import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.BaseDeviceState;
-import org.radarcns.android.device.DeviceManager;
 import org.radarcns.android.device.DeviceService;
 
-import static org.radarcns.android.RadarConfiguration.SOURCE_ID_KEY;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_KEY_DEFAULT;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_KEY_KEY;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_SOURCE_DEFAULT;
@@ -31,14 +28,13 @@ import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_SOURCE_KEY;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_QUERY_INTERVAL_DEFAULT;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_QUERY_INTERVAL_KEY;
 
-public class WeatherApiService extends DeviceService {
-    private String sourceId;
+public class WeatherApiService extends DeviceService<BaseDeviceState> {
     private long queryInterval = WEATHER_QUERY_INTERVAL_DEFAULT;
     private String apiSource = WEATHER_API_SOURCE_DEFAULT;
     private String apiKey = WEATHER_API_KEY_DEFAULT;
 
     @Override
-    protected DeviceManager createDeviceManager() {
+    protected WeatherApiManager createDeviceManager() {
         return new WeatherApiManager(this, apiSource, apiKey);
     }
 
@@ -47,19 +43,7 @@ public class WeatherApiService extends DeviceService {
         return new BaseDeviceState();
     }
 
-    @Override
-    protected WeatherApiTopics getTopics() {
-        return WeatherApiTopics.getInstance();
-    }
-
-    public String getSourceId() {
-        if (sourceId == null) {
-            sourceId = RadarConfiguration.getOrSetUUID(getApplicationContext(), SOURCE_ID_KEY);
-        }
-        return sourceId;
-    }
-
-    public long getQueryInterval() {
+    long getQueryInterval() {
         return queryInterval;
     }
 

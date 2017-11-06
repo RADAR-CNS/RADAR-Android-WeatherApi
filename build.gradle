@@ -1,10 +1,9 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.3'
+        classpath 'com.android.tools.build:gradle:2.3.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
     }
@@ -16,13 +15,13 @@ apply plugin: 'com.github.dcendents.android-maven'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.3"
+    buildToolsVersion "26.0.1"
 
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 3
-        versionName '0.1-alpha.1-SNAPSHOT'
+        versionCode 4
+        versionName '0.1'
     }
     buildTypes {
         release {
@@ -46,7 +45,6 @@ android {
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/LICENSE'
     }
-
 }
 
 //---------------------------------------------------------------------------//
@@ -54,41 +52,34 @@ android {
 //---------------------------------------------------------------------------//
 
 group = 'org.radarcns'
-ext.moduleName = 'nl-android-openweatherapi'
+ext.moduleName = 'radar-android-weather'
 ext.moduleDescription = 'Module  API for passive remote monitoring app'
-ext.githubRepoName = 'TheHyve/radar-openweather-api'
+ext.githubRepoName = 'RADAR-CNS/radar-android-weather'
 version = android.defaultConfig.versionName
 
 ext.githubUrl = 'https://github.com/' + githubRepoName + '.git'
 ext.issueUrl = 'https://github.com/' + githubRepoName + '/issues'
-ext.website = 'http://thehyve.nl'
+ext.website = 'http://radar-cns.org'
 
 //---------------------------------------------------------------------------//
 // Sources and classpath configurations                                      //
 //---------------------------------------------------------------------------//
 
+configurations.compile {
+    resolutionStrategy.cacheChangingModulesFor 0, 'SECONDS'
+}
+
 repositories {
     jcenter()
-    flatDir { dirs 'libs' }
+    maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
 }
 
 dependencies {
-    compile 'org.radarcns:radar-commons-android:0.3-alpha.1-SNAPSHOT@aar'
-    compile 'org.radarcns:radar-schemas-commons:0.2-alpha.3-SNAPSHOT@jar'
-
-    // tmp
-    compile 'com.squareup.okhttp3:okhttp:3.6.0'
-    compile 'org.apache.avro:avro:1.8.2'
-    compile 'org.xerial.snappy:snappy-java:1.1.2.6'
-    compile 'com.google.firebase:firebase-config:10.0.1'
-    compile ('org.radarcns:radar-commons:0.2.1') {
-        exclude group: 'io.confluent', module: 'kafka-avro-serializer'
-        exclude group: 'org.apache.kafka', module: 'kafka-clients'
-        exclude group: 'com.fasterxml.jackson.dataformat', module: 'jackson-dataformat-yaml'
-    }
+    compile 'org.radarcns:radar-commons-android:0.3'
+    compile 'org.radarcns:radar-schemas-commons:0.2'
 
     testCompile 'junit:junit:4.12'
-    testCompile 'org.slf4j:slf4j-simple:1.7.21'
+    testCompile 'org.slf4j:slf4j-simple:1.7.25'
 }
 
 //---------------------------------------------------------------------------//
@@ -124,7 +115,7 @@ artifacts {
     archives sourcesJar
 }
 
-def pomConfig = {
+ext.pomConfig = {
     licenses {
         license {
             name "The Apache Software License, Version 2.0"
@@ -145,13 +136,19 @@ def pomConfig = {
             email 'maxim@thehyve.nl'
             organization 'The Hyve'
         }
+        developer {
+            id 'strangepleasures'
+            name 'Pavel Mikhailovskii'
+            email 'pavel@thehyve.nl'
+            organization 'The Hyve'
+        }
     }
     issueManagement {
         system 'GitHub'
         url githubUrl + '/issues'
     }
     organization {
-        name 'CHDR'
+        name 'RADAR-CNS'
         url website
     }
     scm {
@@ -185,7 +182,7 @@ bintray {
     pkg {
         repo = project.group
         name = moduleName
-        userOrg = 'chdr'
+        userOrg = 'radar-cns'
         desc = moduleDescription
         licenses = ['Apache-2.0']
         websiteUrl = website
@@ -206,6 +203,6 @@ bintray {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '3.4.1'
-    distributionUrl distributionUrl.replace("bin", "all")
+    gradleVersion = '4.1'
+    distributionType 'all'
 }
