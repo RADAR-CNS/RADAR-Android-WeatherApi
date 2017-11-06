@@ -20,7 +20,7 @@ android:
     - extra-google-google_play_services
     - extra-google-m2repository
 
-script: TERM=dumb ./gradlew check assembleDebug -x javadoc
+script: TERM=dumb ./gradlew check assembleDebug
 
 deploy:
   - provider: releases
@@ -33,12 +33,12 @@ deploy:
     on:
       tags: true
   - provider: script
-    script: ./gradlew artifactoryPublish -x javadoc
+    script: ./gradlew artifactoryPublish
     skip_cleanup: true
     on:
       branch: dev
   - provider: script
-    script: ./gradlew bintrayUpload -x javadoc
+    script: ./gradlew bintrayUpload
     skip_cleanup: true
     on:
       tags: true
