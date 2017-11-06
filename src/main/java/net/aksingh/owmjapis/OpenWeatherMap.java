@@ -50,7 +50,7 @@ import java.util.zip.InflaterInputStream;
  * <code>OpenWeatherMap.org owm = new OpenWeatherMap(your-units, your-language, "your-api-key");</code>
  * </p>
  *
- * @author Ashutosh Kumar Singh <me@aksingh.net>
+ * @author Ashutosh Kumar Singh &lt;me@aksingh.net&gt;
  * @version 2015-01-17
  * @see <a href="http://openweathermap.org/">OpenWeatherMap.org</a>
  * @see <a href="http://openweathermap.org/api">OpenWeatherMap.org API</a>
