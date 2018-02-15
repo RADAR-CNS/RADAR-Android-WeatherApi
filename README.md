@@ -24,7 +24,7 @@ dependencies {
 ```
 
 ## Configuration
-To enable this plugin add `.weather.WeatherhApiProvider` to the `device_services_to_connect` property of the configuration in Firebase or `remote_config_defaults.xml`)
+To enable this plugin add `.weather.WeatherApiProvider` to the `device_services_to_connect` property of the configuration in Firebase or `remote_config_defaults.xml`)
 
 The following parameters are available:
 
