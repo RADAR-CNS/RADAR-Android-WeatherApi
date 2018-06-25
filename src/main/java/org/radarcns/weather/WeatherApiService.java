@@ -17,9 +17,13 @@
 package org.radarcns.weather;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceService;
+import org.radarcns.producer.rest.ManagedConnectionPool;
+
+import okhttp3.OkHttpClient;
 
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_KEY_DEFAULT;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_KEY_KEY;
@@ -32,10 +36,19 @@ public class WeatherApiService extends DeviceService<BaseDeviceState> {
     private long queryInterval = WEATHER_QUERY_INTERVAL_DEFAULT;
     private String apiSource = WEATHER_API_SOURCE_DEFAULT;
     private String apiKey = WEATHER_API_KEY_DEFAULT;
+    private OkHttpClient client;
+
+    @Override
+    public void onCreate() {
+        client = new OkHttpClient.Builder()
+                .connectionPool(ManagedConnectionPool.GLOBAL_POOL.acquire())
+                .build();
+        super.onCreate();
+    }
 
     @Override
     protected WeatherApiManager createDeviceManager() {
-        return new WeatherApiManager(this, apiSource, apiKey);
+        return new WeatherApiManager(this, apiSource, apiKey, client);
     }
 
     @Override
@@ -48,7 +61,7 @@ public class WeatherApiService extends DeviceService<BaseDeviceState> {
     }
 
     @Override
-    protected void onInvocation(Bundle bundle) {
+    protected void onInvocation(@NonNull Bundle bundle) {
         super.onInvocation(bundle);
         queryInterval = bundle.getLong(WEATHER_QUERY_INTERVAL_KEY);
         apiSource = bundle.getString(WEATHER_API_SOURCE_KEY);
@@ -58,5 +71,11 @@ public class WeatherApiService extends DeviceService<BaseDeviceState> {
         if (weatherApiManager != null) {
             weatherApiManager.setQueryInterval(queryInterval);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        ManagedConnectionPool.GLOBAL_POOL.release();
+        super.onDestroy();
     }
 }

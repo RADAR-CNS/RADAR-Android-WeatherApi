@@ -26,14 +26,17 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import okhttp3.OkHttpClient;
+
 class OpenWeatherMapApi implements WeatherApi {
     private OpenWeatherMap owm;
     private CurrentWeather cw;
     static final String SOURCE_NAME = "OpenWeatherMap";
     private Double timestamp;
 
-    OpenWeatherMapApi(String apiKey) {
-        owm = new OpenWeatherMap(OpenWeatherMap.Units.METRIC, apiKey);
+    OpenWeatherMapApi(String apiKey, OkHttpClient client) {
+        owm = new OpenWeatherMap(OpenWeatherMap.UNITS_METRIC, OpenWeatherMap.LANGUAGE_ENGLISH,
+                apiKey, client);
     }
 
     @Override
