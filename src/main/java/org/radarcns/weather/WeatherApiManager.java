@@ -34,6 +34,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Set;
 
+import okhttp3.OkHttpClient;
+
 import static android.location.LocationManager.GPS_PROVIDER;
 import static android.location.LocationManager.NETWORK_PROVIDER;
 import static org.radarcns.weather.OpenWeatherMapApi.SOURCE_NAME;
@@ -51,7 +53,7 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
     private LocationManager locationManager;
     private WeatherApi weatherApi;
 
-    public WeatherApiManager(WeatherApiService service, String source, String apiKey) {
+    public WeatherApiManager(WeatherApiService service, String source, String apiKey, OkHttpClient client) {
         super(service);
 
         locationManager = (LocationManager) service.getSystemService(Context.LOCATION_SERVICE);
@@ -61,7 +63,7 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
 
         switch(source) {
             case SOURCE_OPENWEATHERMAP:
-                weatherApi = new OpenWeatherMapApi(apiKey);
+                weatherApi = new OpenWeatherMapApi(apiKey, client);
                 break;
             default:
                 logger.error("The weather api '{}' is not recognised. Please set a different weather api source.", source);
