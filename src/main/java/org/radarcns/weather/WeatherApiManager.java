@@ -46,7 +46,7 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
     static final String SOURCE_OPENWEATHERMAP = "openweathermap";
 
     private final OfflineProcessor processor;
-    private final AvroTopic<ObservationKey, LocalWeather> weatherTopic = createTopic("weather", LocalWeather.class);
+    private final AvroTopic<ObservationKey, LocalWeather> weatherTopic = createTopic("android_local_weather", LocalWeather.class);
 
     private LocationManager locationManager;
     private WeatherApi weatherApi;
