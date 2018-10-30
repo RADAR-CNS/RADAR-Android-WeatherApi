@@ -1,6 +1,6 @@
 # Weather API
 
-Application to be run on an Android 4.4 (or later) device.
+Application to be run on an Android 5.0 (or later) device.
 
 This module requests current weather data from an external API and sends this to the backend. By default, the data is requested every three hours. In addition to basic weather metrics (temperature, pressure, humidity, precipitation), the module also sends the time of day of sunrise and sunset.
 
@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.radarcns:radar-android-weatherapi:0.1-alpha.1'
+    compile 'org.radarcns:radar-android-weatherapi:0.2.0'
 }
 ```
 
