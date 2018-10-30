@@ -16,82 +16,20 @@
 
 package org.radarcns.weather;
 
-import org.radarcns.passive.weather.WeatherCondition;
+import java.io.IOException;
 
 public interface WeatherApi {
-
     /**
      * Loads current weather at a set of coordinates.
-     * @param latitude
-     * @param longitude
-     * @throws Exception
+     * @param latitude WGS84 latitude
+     * @param longitude WGS84 longitude
+     * @throws IOException if loading the current weather fails.
      */
-    void loadCurrentWeather(Double latitude, Double longitude) throws Exception;
-
-    /**
-     * returns timestamp of last weather load in seconds UTC
-     * @return timestamp
-     */
-    Double getTimestamp();
-
-    /**
-     * Returns temperature in degrees Celsius. Or null if unknown.
-     * @return temperature
-     */
-    Float getTemperature();
-
-    /**
-     * Returns current pressure in hPa. Or null if unknown.
-     * @return pressure
-     */
-    Float getPressure();
-
-    /**
-     * Returns current humidity in percentage. Or null if unknown.
-     * @return humidity
-     */
-    Float getHumidity();
-
-    /**
-     * Returns current cloudiness in percentage. Or null if unknown.
-     * @return cloudiness
-     */
-    Float getCloudiness();
-
-    /**
-     * Returns precipitation of the last x hours in millimeter. Or null if unknown.
-     * @return precipitation
-     */
-    Float getPrecipitation();
-
-    /**
-     * Returns hours over which the precipitation was measured. Or null if unknown.
-     * @return precipitation
-     */
-    Integer getPrecipitationPeriod();
-
-    /**
-     * Returns the current weather condition (Clear, Cloudy, Rainy, etc.). Or null if unknown.
-     * @return weather condition
-     */
-    WeatherCondition getWeatherCondition();
-
-    /**
-     * Returns the current time of day of sunrise in hours after midnight. Or null if unknown.
-     * @return sunrise
-     */
-    Integer getSunRise();
-
-    /**
-     * Returns the current time of day of sunset in hours after midnight. Or null if unknown.
-     * @return sunset
-     */
-    Integer getSunSet();
+    WeatherApiResult loadCurrentWeather(double latitude, double longitude) throws IOException;
 
     /**
      * Returns name of the source where the weather data was requested.
-     * @return source name
+     * @return source name or {@code null} if none is set
      */
     String getSourceName();
-
 }

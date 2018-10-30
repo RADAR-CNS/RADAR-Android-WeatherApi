@@ -17,9 +17,16 @@
 package org.radarcns.weather;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceService;
+import org.radarcns.config.ServerConfig;
+import org.radarcns.producer.rest.RestClient;
+
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
 
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_KEY_DEFAULT;
 import static org.radarcns.weather.WeatherApiProvider.WEATHER_API_KEY_KEY;
@@ -32,10 +39,20 @@ public class WeatherApiService extends DeviceService<BaseDeviceState> {
     private long queryInterval = WEATHER_QUERY_INTERVAL_DEFAULT;
     private String apiSource = WEATHER_API_SOURCE_DEFAULT;
     private String apiKey = WEATHER_API_KEY_DEFAULT;
+    private OkHttpClient client;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        client = RestClient.global()
+                .server(new ServerConfig())
+                .build()
+                .getHttpClient();
+    }
 
     @Override
     protected WeatherApiManager createDeviceManager() {
-        return new WeatherApiManager(this, apiSource, apiKey);
+        return new WeatherApiManager(this, apiSource, apiKey, client);
     }
 
     @Override
@@ -43,12 +60,12 @@ public class WeatherApiService extends DeviceService<BaseDeviceState> {
         return new BaseDeviceState();
     }
 
-    long getQueryInterval() {
+    long getQueryIntervalSeconds() {
         return queryInterval;
     }
 
     @Override
-    protected void onInvocation(Bundle bundle) {
+    protected void onInvocation(@NonNull Bundle bundle) {
         super.onInvocation(bundle);
         queryInterval = bundle.getLong(WEATHER_QUERY_INTERVAL_KEY);
         apiSource = bundle.getString(WEATHER_API_SOURCE_KEY);
@@ -56,7 +73,7 @@ public class WeatherApiService extends DeviceService<BaseDeviceState> {
 
         WeatherApiManager weatherApiManager = (WeatherApiManager) getDeviceManager();
         if (weatherApiManager != null) {
-            weatherApiManager.setQueryInterval(queryInterval);
+            weatherApiManager.setQueryInterval(queryInterval, TimeUnit.SECONDS);
         }
     }
 }

@@ -16,109 +16,149 @@
 
 package org.radarcns.weather;
 
+import android.support.annotation.NonNull;
+
 import net.aksingh.owmjapis.CurrentWeather;
 import net.aksingh.owmjapis.OpenWeatherMap;
 
 import org.json.JSONException;
 import org.radarcns.passive.weather.WeatherCondition;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import okhttp3.OkHttpClient;
+
 class OpenWeatherMapApi implements WeatherApi {
     private OpenWeatherMap owm;
-    private CurrentWeather cw;
-    static final String SOURCE_NAME = "OpenWeatherMap";
-    private Double timestamp;
+    private static final String SOURCE_NAME = "OpenWeatherMap";
 
-    OpenWeatherMapApi(String apiKey) {
-        owm = new OpenWeatherMap(OpenWeatherMap.Units.METRIC, apiKey);
+    OpenWeatherMapApi(String apiKey, OkHttpClient client) {
+        owm = new OpenWeatherMap(OpenWeatherMap.UNITS_METRIC, OpenWeatherMap.LANGUAGE_ENGLISH,
+                apiKey, client);
     }
 
     @Override
-    public void loadCurrentWeather(Double latitude, Double longitude) throws Exception {
+    public OpenWeatherMapApiResult loadCurrentWeather(double latitude, double longitude) throws IOException {
+        CurrentWeather cw;
         try {
-            cw = owm.currentWeatherByCoordinates(latitude.floatValue(), longitude.floatValue());
+            cw = owm.currentWeatherByCoordinates((float) latitude, (float) longitude);
         } catch (JSONException ex) {
-            throw new Exception("Could not parse weather data from the OpenWeatherMap API " +
-                    "for latitude " + Double.toString(latitude) +
-                    " and longitude " + Double.toString(longitude)
-            );
+            throw new IOException("Could not parse weather data from the OpenWeatherMap API " +
+                    "for latitude " + latitude + " and longitude " + longitude, ex);
         }
 
         if (cw.isValid()) {
-            this.timestamp = System.currentTimeMillis() / 1000d;
+            return new OpenWeatherMapApiResult(cw);
         } else {
-            throw new Exception("Could not get weather data from the OpenWeatherMap API " +
-                    "for latitude " + Double.toString(latitude) +
-                    " and longitude " + Double.toString(longitude)
-            );
+            throw new IOException("Could not get weather data from the OpenWeatherMap API " +
+                    "for latitude " + latitude + " and longitude " + longitude);
         }
     }
 
-    @Override
-    public Double getTimestamp() {
-        return timestamp;
-    }
+    private static class OpenWeatherMapApiResult implements WeatherApiResult {
+        private final double timestamp;
+        private final Float temperature;
+        private final Integer sunSet;
+        private final Float pressure;
+        private final Float humidity;
+        private final Float precipitation;
+        private final Integer precipitationPeriod;
+        private final Integer sunRise;
+        private final CurrentWeather cw;
 
-    @Override
-    public Float getTemperature() {
-        CurrentWeather.Main weather = cw.getMainInstance();
-        return (cw.hasMainInstance() && weather.hasTemperature()) ? weather.getTemperature() : null;
-    }
+        OpenWeatherMapApiResult(CurrentWeather cw) {
+            this.cw = cw;
+            this.timestamp = System.currentTimeMillis() / 1000d;
 
-    @Override
-    public Float getHumidity() {
-        CurrentWeather.Main weather = cw.getMainInstance();
-        return (cw.hasMainInstance() && weather.hasPressure()) ? weather.getPressure() : null;
-    }
+            CurrentWeather.Main main = cw.getMainInstance();
+            if (main != null) {
+                temperature = main.hasTemperature() ? main.getTemperature() : null;
+                pressure = main.hasPressure() ? main.getPressure() : null;
+                humidity = main.hasHumidity() ? main.getHumidity() : null;
+            } else {
+                temperature = null;
+                pressure = null;
+                humidity = null;
+            }
 
-    @Override
-    public Float getPressure() {
-        CurrentWeather.Main weather = cw.getMainInstance();
-        return (cw.hasMainInstance() && weather.hasHumidity()) ? weather.getHumidity() : null;
-    }
+            CurrentWeather.Sys sys = cw.getSysInstance();
+            if (sys != null) {
+                sunRise = getTimeOfDayFromDate(sys.getSunriseTime());
+                sunSet = getTimeOfDayFromDate(sys.getSunsetTime());
+            } else {
+                sunRise = null;
+                sunSet = null;
+            }
 
-    @Override
-    public Float getCloudiness() {
-        CurrentWeather.Clouds clouds = cw.getCloudsInstance();
-        return (cw.hasCloudsInstance() && clouds.hasPercentageOfClouds()) ? clouds.getPercentageOfClouds() : null;
-    }
-
-    @Override
-    public Float getPrecipitation() {
-        // Total precipitation from rain and snow
-        float totalPrecipitation = 0;
-
-        CurrentWeather.Rain rain = cw.getRainInstance();
-        if (cw.hasRainInstance() && rain.hasRain3h()) {
-            totalPrecipitation += rain.getRain3h();
+            precipitation = compute3hPrecipitation(cw.getRainInstance(), cw.getSnowInstance());
+            precipitationPeriod = precipitation != null ? 3 : null;
         }
 
-        CurrentWeather.Snow snow = cw.getSnowInstance();
-        if (cw.hasSnowInstance() && snow.hasSnow3h()) {
-            totalPrecipitation += snow.getSnow3h();
+        @Override
+        public double getTimestamp() {
+            return timestamp;
         }
 
-        return totalPrecipitation;
-    }
+        @Override
+        public Float getTemperature() {
+            return temperature;
+        }
 
-    @Override
-    public Integer getPrecipitationPeriod() {
-        // Always 3 hours
-        return 3;
-    }
+        @Override
+        public Float getPressure() {
+            return pressure;
+        }
 
-    @Override
-    public WeatherCondition getWeatherCondition() {
-        WeatherCondition weatherCondition = null;
-        if (cw.hasWeatherInstance()) {
+        @Override
+        public Float getHumidity() {
+            return humidity;
+        }
+
+        @Override
+        public Float getCloudiness() {
+            CurrentWeather.Clouds clouds = cw.getCloudsInstance();
+            return clouds != null && clouds.hasPercentageOfClouds() ? clouds.getPercentageOfClouds() : null;
+        }
+
+        @Override
+        public Float getPrecipitation() {
+            return precipitation;
+        }
+
+        @Override
+        public Integer getPrecipitationPeriod() {
+            return precipitationPeriod;
+        }
+
+        @NonNull
+        @Override
+        public WeatherCondition getWeatherCondition() {
+            if (!cw.hasWeatherInstance()) {
+                return WeatherCondition.UNKNOWN;
+            }
             // Get weather code of primary weather condition instance
             int code = cw.getWeatherInstance(0).getWeatherCode();
-            weatherCondition = translateWeatherCode(code);
+            return translateWeatherCode(code);
         }
-        return weatherCondition;
+
+        @Override
+        public Integer getSunRise() {
+            return sunRise;
+        }
+
+        @Override
+        public Integer getSunSet() {
+            return sunSet;
+        }
+
+        @Override
+        public String toString() {
+            return cw.toString();
+        }
     }
 
     @Override
@@ -126,24 +166,20 @@ class OpenWeatherMapApi implements WeatherApi {
         return SOURCE_NAME;
     }
 
-    @Override
-    public Integer getSunRise() {
-        if (!cw.hasSysInstance()) {
+    private static Float compute3hPrecipitation(CurrentWeather.Rain rain, CurrentWeather.Snow snow) {
+        if (rain != null || snow != null) {
+            BigDecimal totalPrecipitation = BigDecimal.ZERO;
+            if (rain != null && rain.hasRain3h()) {
+                totalPrecipitation = totalPrecipitation.add(new BigDecimal(String.valueOf(rain.getRain3h())));
+            }
+
+            if (snow != null && snow.hasSnow3h()) {
+                totalPrecipitation = totalPrecipitation.add(new BigDecimal(String.valueOf(snow.getSnow3h())));
+            }
+            return totalPrecipitation.floatValue();
+        } else {
             return null;
         }
-
-        CurrentWeather.Sys sys = cw.getSysInstance();
-        return getTimeOfDayFromDate(sys.getSunriseTime());
-    }
-
-    @Override
-    public Integer getSunSet() {
-        if (!cw.hasSysInstance()) {
-            return null;
-        }
-
-        CurrentWeather.Sys sys = cw.getSysInstance();
-        return getTimeOfDayFromDate(sys.getSunsetTime());
     }
 
     private static WeatherCondition translateWeatherCode(int code) {
@@ -186,10 +222,5 @@ class OpenWeatherMapApi implements WeatherApi {
         Calendar c = Calendar.getInstance(TimeZone.getDefault());
         c.setTime(date);
         return c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE);
-    }
-
-    @Override
-    public String toString() {
-        return cw.toString();
     }
 }
