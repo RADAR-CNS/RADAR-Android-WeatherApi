@@ -21,7 +21,10 @@ import android.support.annotation.NonNull;
 
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceService;
-import org.radarcns.producer.rest.ManagedConnectionPool;
+import org.radarcns.config.ServerConfig;
+import org.radarcns.producer.rest.RestClient;
+
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 
@@ -40,10 +43,11 @@ public class WeatherApiService extends DeviceService<BaseDeviceState> {
 
     @Override
     public void onCreate() {
-        client = new OkHttpClient.Builder()
-                .connectionPool(ManagedConnectionPool.GLOBAL_POOL.acquire())
-                .build();
         super.onCreate();
+        client = RestClient.global()
+                .server(new ServerConfig())
+                .build()
+                .getHttpClient();
     }
 
     @Override
@@ -56,7 +60,7 @@ public class WeatherApiService extends DeviceService<BaseDeviceState> {
         return new BaseDeviceState();
     }
 
-    long getQueryInterval() {
+    long getQueryIntervalSeconds() {
         return queryInterval;
     }
 
@@ -69,13 +73,7 @@ public class WeatherApiService extends DeviceService<BaseDeviceState> {
 
         WeatherApiManager weatherApiManager = (WeatherApiManager) getDeviceManager();
         if (weatherApiManager != null) {
-            weatherApiManager.setQueryInterval(queryInterval);
+            weatherApiManager.setQueryInterval(queryInterval, TimeUnit.SECONDS);
         }
-    }
-
-    @Override
-    public void onDestroy() {
-        ManagedConnectionPool.GLOBAL_POOL.release();
-        super.onDestroy();
     }
 }

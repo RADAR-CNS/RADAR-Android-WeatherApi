@@ -20,6 +20,7 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
+
 import org.radarcns.android.device.AbstractDeviceManager;
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceStatusListener;
@@ -32,18 +33,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 
 import static android.location.LocationManager.GPS_PROVIDER;
 import static android.location.LocationManager.NETWORK_PROVIDER;
-import static org.radarcns.weather.OpenWeatherMapApi.SOURCE_NAME;
 
 public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, BaseDeviceState> implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(WeatherApiManager.class);
 
     private static final int WEATHER_UPDATE_REQUEST_CODE = 627976615;
+    private static final Map<String, LocationType> LOCATION_TYPES = new HashMap<>(4);
+    static {
+        LOCATION_TYPES.put(GPS_PROVIDER, LocationType.GPS);
+        LOCATION_TYPES.put(NETWORK_PROVIDER, LocationType.NETWORK);
+    }
     private static final String ACTION_UPDATE_WEATHER = "org.radarcns.weather.WeatherApiManager.ACTION_UPDATE_WEATHER";
     static final String SOURCE_OPENWEATHERMAP = "openweathermap";
 
@@ -59,18 +67,14 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         locationManager = (LocationManager) service.getSystemService(Context.LOCATION_SERVICE);
 
         processor = new OfflineProcessor(service, this, WEATHER_UPDATE_REQUEST_CODE,
-                ACTION_UPDATE_WEATHER, service.getQueryInterval(), true);
+                ACTION_UPDATE_WEATHER, service.getQueryIntervalSeconds(), TimeUnit.SECONDS, true);
 
-        switch(source) {
-            case SOURCE_OPENWEATHERMAP:
-                weatherApi = new OpenWeatherMapApi(apiKey, client);
-                break;
-            default:
-                logger.error("The weather api '{}' is not recognised. Please set a different weather api source.", source);
-                return;
+        if (source.equals(SOURCE_OPENWEATHERMAP)) {
+            weatherApi = new OpenWeatherMapApi(apiKey, client);
+            logger.info("WeatherApiManager created with interval of {} seconds and key {}", service.getQueryIntervalSeconds(), apiKey);
+        } else {
+            logger.error("The weather api '{}' is not recognised. Please set a different weather api source.", source);
         }
-        setName(SOURCE_NAME);
-        logger.info("WeatherApiManager created with interval of {} seconds and key {}", service.getQueryInterval(), apiKey);
     }
 
     @Override
@@ -92,45 +96,36 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         }
 
         try {
-            weatherApi.loadCurrentWeather(location.getLatitude(), location.getLongitude());
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error("Could not get weather from {} API.", weatherApi.getSourceName());
-            return;
-        }
+            WeatherApiResult result = weatherApi.loadCurrentWeather(location.getLatitude(), location.getLongitude());
 
-        // How location was derived
-        LocationType locationType;
-        switch (location.getProvider()) {
-            case GPS_PROVIDER:
-                locationType = LocationType.GPS;
-                break;
-            case NETWORK_PROVIDER:
-                locationType = LocationType.NETWORK;
-                break;
-            default:
+            // How location was derived
+            LocationType locationType = LOCATION_TYPES.get(location.getProvider());
+            if (locationType == null) {
                 locationType = LocationType.OTHER;
+            }
+
+            double timestamp = System.currentTimeMillis() / 1000d;
+            LocalWeather weatherData = new LocalWeather(
+                    result.getTimestamp(),
+                    timestamp,
+                    result.getSunRise(),
+                    result.getSunSet(),
+                    result.getTemperature(),
+                    result.getPressure(),
+                    result.getHumidity(),
+                    result.getCloudiness(),
+                    result.getPrecipitation(),
+                    result.getPrecipitationPeriod(),
+                    result.getWeatherCondition(),
+                    weatherApi.getSourceName(),
+                    locationType
+            );
+
+            logger.info("Weather: {} {} {}", result, result.getSunRise(), result.getSunSet());
+            send(weatherTopic, weatherData);
+        } catch (IOException e) {
+            logger.error("Could not get weather from {} API.", weatherApi);
         }
-
-        double timestamp = System.currentTimeMillis() / 1000d;
-        LocalWeather weatherData = new LocalWeather(
-                weatherApi.getTimestamp(),
-                timestamp,
-                weatherApi.getSunRise(),
-                weatherApi.getSunSet(),
-                weatherApi.getTemperature(),
-                weatherApi.getPressure(),
-                weatherApi.getHumidity(),
-                weatherApi.getCloudiness(),
-                weatherApi.getPrecipitation(),
-                weatherApi.getPrecipitationPeriod(),
-                weatherApi.getWeatherCondition(),
-                weatherApi.getSourceName(),
-                locationType
-        );
-
-        logger.info("Weather: {} {} {}", weatherApi.toString(), weatherApi.getSunRise(), weatherApi.getSunSet());
-        send(weatherTopic, weatherData);
     }
 
     /**
@@ -139,10 +134,14 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
      * @return Location or null if location could not be determined (not available or no permission)
      */
     private Location getLastKnownLocation() {
+        if (locationManager == null) {
+            logger.error("Cannot get location without a location manager.");
+            updateStatus(DeviceStatusListener.Status.DISCONNECTED);
+            return null;
+        }
         Location location;
         try {
             location = locationManager.getLastKnownLocation(GPS_PROVIDER);
-
             if (location == null) {
                 location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             }
@@ -153,8 +152,8 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         }
     }
 
-    void setQueryInterval(long queryInterval) {
-        processor.setInterval(queryInterval);
+    void setQueryInterval(long queryInterval, TimeUnit unit) {
+        processor.setInterval(queryInterval, unit);
     }
 
     @Override

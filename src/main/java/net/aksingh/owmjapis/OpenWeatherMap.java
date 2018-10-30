@@ -59,13 +59,14 @@ import okhttp3.ResponseBody;
  * @see <a href="http://openweathermap.org/api">OpenWeatherMap.org API</a>
  * @since 2.5.0.1
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class OpenWeatherMap {
     private static final Logger logger = LoggerFactory.getLogger(OpenWeatherMap.class);
 
     /*
     URLs and parameters for OWM.org
      */
-    private static final String URL_API = "http://api.openweathermap.org/data/2.5/";
+    public static final String URL_API = "http://api.openweathermap.org/data/2.5/";
     private static final String URL_CURRENT = "weather?";
     private static final String URL_HOURLY_FORECAST = "forecast?";
     private static final String URL_DAILY_FORECAST = "forecast/daily?";
@@ -300,13 +301,12 @@ public class OpenWeatherMap {
         return new DailyForecast(jsonObj);
     }
 
-
-
     /**
      * Generates addresses for accessing the information from OWM.org
      *
      * @since 2.5.0.3
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public static class OWMAddress {
         private static final String MODE = "json";
         private static final String ENCODING = "UTF-8";
@@ -481,6 +481,7 @@ public class OpenWeatherMap {
      *
      * @since 2.5.0.3
      */
+    @SuppressWarnings("WeakerAccess")
     private static class OWMResponse {
         private final OWMAddress owmAddress;
         private final OkHttpClient client;

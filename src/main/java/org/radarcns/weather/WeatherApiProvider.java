@@ -92,15 +92,12 @@ public class WeatherApiProvider extends DeviceServiceProvider<BaseDeviceState> {
         super.configure(bundle);
         RadarConfiguration config = getConfig();
         bundle.putLong(WEATHER_QUERY_INTERVAL_KEY,
-                config.getLong(WEATHER_QUERY_INTERVAL, WEATHER_QUERY_INTERVAL_DEFAULT)
-        );
+                config.getLong(WEATHER_QUERY_INTERVAL, WEATHER_QUERY_INTERVAL_DEFAULT));
 
         bundle.putString(WEATHER_API_KEY_KEY,
-                config.getString(WEATHER_API_KEY, WEATHER_API_KEY_DEFAULT)
-        );
+                config.getString(WEATHER_API_KEY, WEATHER_API_KEY_DEFAULT));
 
         bundle.putString(WEATHER_API_SOURCE_KEY,
-                config.getString(WEATHER_API_SOURCE, WEATHER_API_SOURCE_DEFAULT)
-        );
+                config.getString(WEATHER_API_SOURCE, WEATHER_API_SOURCE_DEFAULT));
     }
 }
