@@ -16,6 +16,7 @@
 
 package org.radarcns.weather;
 
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import android.support.annotation.NonNull;
@@ -24,6 +25,7 @@ import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceServiceProvider;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -59,9 +61,16 @@ public class WeatherApiProvider extends DeviceServiceProvider<BaseDeviceState> {
         return getRadarService().getString(R.string.weatherApiServcieDisplayName);
     }
 
+    @NonNull
     @Override
     public List<String> needsPermissions() {
         return Arrays.asList(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION);
+    }
+
+    @NonNull
+    @Override
+    public List<String> needsFeatures() {
+        return Collections.singletonList(PackageManager.FEATURE_LOCATION);
     }
 
     @NonNull
