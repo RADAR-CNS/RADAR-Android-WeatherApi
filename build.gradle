@@ -93,7 +93,7 @@ repositories {
 }
 
 dependencies {
-    api 'org.radarcns:radar-commons-android:0.8.0'
+    api 'org.radarcns:radar-commons-android:0.9.3'
     implementation 'org.radarcns:radar-schemas-commons:0.4.0'
 
     testImplementation 'junit:junit:4.12'
