@@ -24,6 +24,7 @@ import android.support.annotation.NonNull;
 import org.radarcns.android.device.AbstractDeviceManager;
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceStatusListener;
+import org.radarcns.android.util.NetworkConnectedReceiver;
 import org.radarcns.android.util.OfflineProcessor;
 import org.radarcns.kafka.ObservationKey;
 import org.radarcns.passive.weather.LocalWeather;
@@ -43,7 +44,7 @@ import okhttp3.OkHttpClient;
 import static android.location.LocationManager.GPS_PROVIDER;
 import static android.location.LocationManager.NETWORK_PROVIDER;
 
-public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, BaseDeviceState> implements Runnable {
+public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, BaseDeviceState> {
     private static final Logger logger = LoggerFactory.getLogger(WeatherApiManager.class);
 
     private static final int WEATHER_UPDATE_REQUEST_CODE = 627976615;
@@ -57,17 +58,27 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
 
     private final OfflineProcessor processor;
     private final AvroTopic<ObservationKey, LocalWeather> weatherTopic = createTopic("android_local_weather", LocalWeather.class);
+    private final NetworkConnectedReceiver networkReceiver;
 
     private LocationManager locationManager;
     private WeatherApi weatherApi;
+    private volatile boolean doRequest;
 
-    public WeatherApiManager(WeatherApiService service, String source, String apiKey, OkHttpClient client) {
+    public WeatherApiManager(WeatherApiService service, String source, String apiKey,
+            OkHttpClient client) {
         super(service);
 
         locationManager = (LocationManager) service.getSystemService(Context.LOCATION_SERVICE);
 
-        processor = new OfflineProcessor(service, this, WEATHER_UPDATE_REQUEST_CODE,
-                ACTION_UPDATE_WEATHER, service.getQueryIntervalSeconds(), TimeUnit.SECONDS, true);
+        processor = new OfflineProcessor.Builder(service)
+                .addProcess(this::processWeather)
+                .requestIdentifier(WEATHER_UPDATE_REQUEST_CODE, ACTION_UPDATE_WEATHER)
+                .interval(service.getQueryIntervalSeconds(), TimeUnit.SECONDS)
+                .wake(true)
+                .build();
+
+        networkReceiver = new NetworkConnectedReceiver(service,
+                (isConnected, hasWifiOrEthernet) -> doRequest = isConnected);
 
         if (source.equals(SOURCE_OPENWEATHERMAP)) {
             weatherApi = new OpenWeatherMapApi(apiKey, client);
@@ -82,13 +93,17 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
         updateStatus(DeviceStatusListener.Status.READY);
 
         logger.info("Starting WeatherApiManager");
+        networkReceiver.register();
         processor.start();
 
         updateStatus(DeviceStatusListener.Status.CONNECTED);
     }
 
-    @Override
-    public void run() {
+    public void processWeather() {
+        if (!doRequest) {
+            logger.warn("No internet connection. Skipping weather query.");
+        }
+
         Location location = this.getLastKnownLocation();
         if (location == null) {
             logger.error("Could not retrieve location. No input for Weather API");
@@ -158,6 +173,7 @@ public class WeatherApiManager extends AbstractDeviceManager<WeatherApiService, 
 
     @Override
     public void close() throws IOException {
+        networkReceiver.unregister();
         processor.close();
         super.close();
     }
