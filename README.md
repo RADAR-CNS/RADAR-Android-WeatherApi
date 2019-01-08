@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.radarcns:radar-android-weatherapi:0.2.0'
+    compile 'org.radarcns:radar-android-weatherapi:0.2.1'
 }
 ```
 
