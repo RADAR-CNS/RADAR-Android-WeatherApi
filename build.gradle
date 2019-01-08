@@ -21,8 +21,8 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.1'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.1'
-        classpath 'digital.wup:android-maven-publish:3.6.1'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+        classpath 'digital.wup:android-maven-publish:3.6.2'
     }
 }
 
@@ -38,8 +38,8 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 5
-        versionName '0.2.0'
+        versionCode 6
+        versionName '0.2.1'
     }
     lintOptions {
         abortOnError false
@@ -94,7 +94,7 @@ repositories {
 
 dependencies {
     api 'org.radarcns:radar-commons-android:0.9.3'
-    implementation 'org.radarcns:radar-schemas-commons:0.4.0'
+    implementation 'org.radarcns:radar-schemas-commons:0.4.3'
 
     testImplementation 'junit:junit:4.12'
     testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.25'
