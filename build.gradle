@@ -97,7 +97,7 @@ dependencies {
     implementation 'org.radarcns:radar-schemas-commons:0.4.3'
 
     testImplementation 'junit:junit:4.12'
-    testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.25'
+    testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.26'
 }
 
 tasks.withType(JavaCompile) {
