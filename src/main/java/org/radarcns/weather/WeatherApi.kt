@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-package org.radarcns.weather;
+package org.radarcns.weather
 
-import java.io.IOException;
+import java.io.IOException
 
-public interface WeatherApi {
+interface WeatherApi {
+
+    /**
+     * Returns name of the source where the weather data was requested.
+     * @return source name or `null` if none is set
+     */
+    val sourceName: String
+
     /**
      * Loads current weather at a set of coordinates.
      * @param latitude WGS84 latitude
      * @param longitude WGS84 longitude
      * @throws IOException if loading the current weather fails.
      */
-    WeatherApiResult loadCurrentWeather(double latitude, double longitude) throws IOException;
-
-    /**
-     * Returns name of the source where the weather data was requested.
-     * @return source name or {@code null} if none is set
-     */
-    String getSourceName();
+    @Throws(IOException::class)
+    fun loadCurrentWeather(latitude: Double, longitude: Double): WeatherApiResult
 }

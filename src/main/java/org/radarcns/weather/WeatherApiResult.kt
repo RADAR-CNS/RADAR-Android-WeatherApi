@@ -14,71 +14,68 @@
  * limitations under the License.
  */
 
-package org.radarcns.weather;
+package org.radarcns.weather
 
-import android.support.annotation.NonNull;
+import org.radarcns.passive.weather.WeatherCondition
 
-import org.radarcns.passive.weather.WeatherCondition;
-
-public interface WeatherApiResult {
+interface WeatherApiResult {
     /**
      * returns timestamp of last weather load in seconds since the Unix Epoch
      * @return timestamp
      */
-    double getTimestamp();
+    val timestamp: Double
 
     /**
      * Returns temperature in degrees Celsius. Or null if unknown.
-     * @return temperature or {@code null} if none is set
+     * @return temperature or `null` if none is set
      */
-    Float getTemperature();
+    val temperature: Float?
 
     /**
      * Returns current pressure in hPa. Or null if unknown.
-     * @return pressure or {@code null} if none is set
+     * @return pressure or `null` if none is set
      */
-    Float getPressure();
+    val pressure: Float?
 
     /**
      * Returns current humidity in percentage. Or null if unknown.
-     * @return humidity or {@code null} if none is set
+     * @return humidity or `null` if none is set
      */
-    Float getHumidity();
+    val humidity: Float?
 
     /**
      * Returns current cloudiness in percentage. Or null if unknown.
-     * @return cloudiness or {@code null} if none is set
+     * @return cloudiness or `null` if none is set
      */
-    Float getCloudiness();
+    val cloudiness: Float?
 
     /**
      * Returns precipitation of the last x hours in millimeter. Or null if unknown.
-     * @return precipitation or {@code null} if none is set
+     * @return precipitation or `null` if none is set
      */
-    Float getPrecipitation();
+    val precipitation: Float?
 
     /**
      * Returns hours over which the precipitation was measured. Or null if unknown.
-     * @return precipitation or {@code null} if none is set
+     * @return precipitation or `null` if none is set
      */
-    Integer getPrecipitationPeriod();
+    val precipitationPeriod: Int?
 
     /**
      * Returns the current weather condition (Clear, Cloudy, Rainy, etc.).
      * @return weather condition
      */
-    @NonNull
-    WeatherCondition getWeatherCondition();
+    val weatherCondition: WeatherCondition
 
     /**
      * Returns the current time of day of sunrise in hours after midnight. Or null if unknown.
-     * @return sunrise or {@code null} if none is set
+     * @return sunrise or `null` if none is set
      */
-    Integer getSunRise();
+    val sunRise: Int?
 
     /**
      * Returns the current time of day of sunset in hours after midnight. Or null if unknown.
-     * @return sunset or {@code null} if none is set
+     * @return sunset or `null` if none is set
      */
-    Integer getSunSet();
+    val sunSet: Int?
 }

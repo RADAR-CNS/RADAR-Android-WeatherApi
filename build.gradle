@@ -15,18 +15,21 @@
  */
 
 buildscript {
+    ext.kotlin_version = '1.3.21'
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'com.android.tools.build:gradle:3.3.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'digital.wup:android-maven-publish:3.6.2'
     }
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 apply plugin: 'digital.wup.android-maven-publish'
@@ -64,8 +67,8 @@ android {
         exclude 'META-INF/LICENSE'
     }
     compileOptions {
-        targetCompatibility 1.8
-        sourceCompatibility 1.8
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -90,18 +93,30 @@ ext.website = 'http://radar-cns.org'
 repositories {
     google()
     jcenter()
+    mavenLocal()
 }
 
 dependencies {
-    api 'org.radarcns:radar-commons-android:0.9.3'
+    api 'org.radarbase:radar-commons-android:0.10.0-SNAPSHOT'
     implementation 'org.radarcns:radar-schemas-commons:0.4.3'
 
     testImplementation 'junit:junit:4.12'
-    testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.25'
+    testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.26'
 }
 
 tasks.withType(JavaCompile) {
     options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+        apiVersion = '1.3'
+        languageVersion = '1.3'
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -123,7 +138,7 @@ task javadoc(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
     android.libraryVariants.all { variant ->
         if (variant.name == 'release') {
-            owner.classpath += variant.javaCompiler.classpath
+            owner.classpath += variant.javaCompileProvider.get().classpath
         }
     }
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
@@ -214,5 +229,5 @@ bintray {
 bintrayUpload.dependsOn 'assembleRelease'
 
 wrapper {
-    gradleVersion '4.10.2'
+    gradleVersion '5.2.1'
 }
