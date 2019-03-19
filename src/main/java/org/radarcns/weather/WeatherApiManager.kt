@@ -102,10 +102,9 @@ class WeatherApiManager(service: WeatherApiService, private val client: OkHttpCl
                 else -> LocationType.OTHER
             }
 
-            val timestamp = System.currentTimeMillis() / 1000.0
             val weatherData = LocalWeather(
                     result.timestamp,
-                    timestamp,
+                    currentTime,
                     result.sunRise,
                     result.sunSet,
                     result.temperature,
