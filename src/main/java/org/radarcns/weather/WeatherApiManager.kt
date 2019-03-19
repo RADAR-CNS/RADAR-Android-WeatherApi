@@ -46,7 +46,6 @@ class WeatherApiManager(service: WeatherApiService, private val client: OkHttpCl
     private var weatherApi: WeatherApi? = null
 
     init {
-
         processor = OfflineProcessor(service) {
             process = listOf(this@WeatherApiManager::processWeather)
             requestCode = WEATHER_UPDATE_REQUEST_CODE
@@ -56,8 +55,6 @@ class WeatherApiManager(service: WeatherApiService, private val client: OkHttpCl
         }
 
         networkReceiver = NetworkConnectedReceiver(service)
-
-        name = "OpenWeatherMap"
     }
 
     @Synchronized
@@ -73,7 +70,7 @@ class WeatherApiManager(service: WeatherApiService, private val client: OkHttpCl
     override fun start(acceptableIds: Set<String>) {
         updateStatus(DeviceStatusListener.Status.READY)
 
-        service.ensureRegistration(appLocalId, name, emptyMap())
+        register(name = "OpenWeatherMap")
 
         logger.info("Starting WeatherApiManager")
         networkReceiver.register()

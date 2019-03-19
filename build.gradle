@@ -42,7 +42,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 7
-        versionName '0.2.2-SNAPSHOT'
+        versionName '0.3.0-SNAPSHOT'
     }
     lintOptions {
         abortOnError false
@@ -129,7 +129,7 @@ ext.sharedManifest = manifest {
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier.set('sources')
     from android.sourceSets.main.java.srcDirs
     manifest.from sharedManifest
 }
@@ -143,11 +143,12 @@ task javadoc(type: Javadoc) {
     }
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     exclude '**/R.java'
+    exclude '**/*.kt'
     exclude '**/BuildConfig.java'
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier.set('javadoc')
     from javadoc.destinationDir
     manifest.from sharedManifest
 }
@@ -169,15 +170,15 @@ publishing {
                 }
                 developers {
                     developer {
-                        id = 'MaximMoinat'
-                        name = 'Maxim Moinat'
-                        email = 'maxim@thehyve.nl'
-                        organization = 'The Hyve'
-                    }
-                    developer {
                         id = 'blootsvoets'
                         name = 'Joris Borgdorff'
                         email = 'joris@thehyve.nl'
+                        organization = 'The Hyve'
+                    }
+                    developer {
+                        id = 'maximmoinat'
+                        name = 'Maxim Moinat'
+                        email = 'maxim@thehyve.nl'
                         organization = 'The Hyve'
                     }
                 }
@@ -199,9 +200,9 @@ publishing {
 }
 
 bintray {
-    user project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-    key project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-    override false
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    override = false
     publications 'mavenAar'
     pkg {
         repo = project.group
